@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://drgyh6wmemuj"]
+
+[ext_resource type="Script" uid="uid://q781ny2itd3c" path="res://Scripts3D/Bullet3D.cs" id="1_wxufd"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_8g2br"]
+albedo_color = Color(1, 1, 0.2901961, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_xtwny"]
+material = SubResource("StandardMaterial3D_8g2br")
+radius = 0.12
+height = 0.24
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_g0dev"]
+radius = 0.12
+
+[node name="Bullet" type="CharacterBody3D" unique_id=1301184859]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("1_wxufd")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=552641815]
+mesh = SubResource("SphereMesh_xtwny")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1697989041]
+shape = SubResource("SphereShape3D_g0dev")

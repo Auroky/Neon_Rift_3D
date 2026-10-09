@@ -1,0 +1,24 @@
+[gd_scene format=3 uid="uid://ojki603f8540"]
+
+[ext_resource type="Script" uid="uid://b2bjrv2big0q3" path="res://Scripts3D/ChaserEnemy3D.cs" id="1_bk4j3"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bk4j3"]
+albedo_color = Color(1, 0.04000002, 0.04000002, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yvvi8"]
+material = SubResource("StandardMaterial3D_bk4j3")
+size = Vector3(0.8, 0.6, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_le8mc"]
+size = Vector3(0.8, 0.6, 0.8)
+
+[node name="ChaserEnemy" type="CharacterBody3D" unique_id=467936660]
+collision_layer = 2
+collision_mask = 8
+script = ExtResource("1_bk4j3")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1320862755]
+mesh = SubResource("BoxMesh_yvvi8")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=276194387]
+shape = SubResource("BoxShape3D_le8mc")

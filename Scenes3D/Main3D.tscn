@@ -1,0 +1,106 @@
+[gd_scene format=3 uid="uid://b2dg8wywqvbrq"]
+
+[ext_resource type="PackedScene" uid="uid://bmqptbh3t3h7q" path="res://Scenes3D/Player3D.tscn" id="1_aw62g"]
+[ext_resource type="Script" uid="uid://du2chsab8re" path="res://Scripts3D/Game3D.cs" id="1_yorol"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_xtwny"]
+size = Vector3(20, 0.2, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xtwny"]
+size = Vector3(20, 0.2, 14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_8g2br"]
+size = Vector3(20, 2, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g0dev"]
+size = Vector3(20, 2, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_y760c"]
+size = Vector3(20, 2, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vn63g"]
+size = Vector3(20, 2, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_mtyku"]
+size = Vector3(0.3, 2, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_l65bb"]
+size = Vector3(0.3, 2, 14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_676ko"]
+size = Vector3(0.3, 2, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f7vvs"]
+size = Vector3(0.3, 2, 14)
+
+[node name="NeonRift3D" type="Node3D" unique_id=633258380]
+script = ExtResource("1_yorol")
+
+[node name="Arena" type="Node3D" parent="." unique_id=1915289358]
+
+[node name="Ground" type="StaticBody3D" parent="Arena" unique_id=1499611963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/Ground" unique_id=1394946090]
+mesh = SubResource("BoxMesh_xtwny")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/Ground" unique_id=1728138945]
+shape = SubResource("BoxShape3D_xtwny")
+
+[node name="NorthWall" type="StaticBody3D" parent="Arena" unique_id=124595115]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -7)
+collision_layer = 8
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/NorthWall" unique_id=1160922548]
+mesh = SubResource("BoxMesh_8g2br")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/NorthWall" unique_id=1162548340]
+shape = SubResource("BoxShape3D_g0dev")
+
+[node name="SouthWall" type="StaticBody3D" parent="Arena" unique_id=990455544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 7)
+collision_layer = 8
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/SouthWall" unique_id=383052883]
+mesh = SubResource("BoxMesh_y760c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/SouthWall" unique_id=1257493403]
+shape = SubResource("BoxShape3D_vn63g")
+
+[node name="EastWall" type="StaticBody3D" parent="Arena" unique_id=36489134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/EastWall" unique_id=1103534120]
+mesh = SubResource("BoxMesh_mtyku")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/EastWall" unique_id=1437570498]
+shape = SubResource("BoxShape3D_l65bb")
+
+[node name="WestWall" type="StaticBody3D" parent="Arena" unique_id=1463264448]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 0)
+collision_layer = 8
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WestWall" unique_id=975890770]
+mesh = SubResource("BoxMesh_676ko")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WestWall" unique_id=367185987]
+shape = SubResource("BoxShape3D_f7vvs")
+
+[node name="Entities" type="Node3D" parent="." unique_id=854207632]
+
+[node name="Player" parent="." unique_id=121266100 instance=ExtResource("1_aw62g")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=658675900]
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 14, 14)
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=659561289]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
