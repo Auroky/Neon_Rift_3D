@@ -1,7 +1,7 @@
 // TEACHING GUIDE: Game3D is OUR game coordinator; Node3D and PackedScene are GODOT.
 // GODOT API: _Ready, _PhysicsProcess, GD.Load, GetNode, Instantiate, AddChild.
 // OUR RULES: first spawn at 1.5 s, then every 2.5 s; win after 10 kills;
-// first four kills unlock Strikers for all subsequent spawns; score depends on enemy type.
+// every third spawn is a Heavy; other spawns become Strikers after four kills.
 // WORLD UNITS: speeds are Godot 3D units per second, not pixels per second.
 
 using Godot;
@@ -19,6 +19,8 @@ public partial class Game3D : Node3D
 
 	private PackedScene _strikerScene = null!;
 
+	private PackedScene _heavyScene = null!;
+
 	private PackedScene _bulletScene = null!;
 
 	private Node3D _entities = null!;
@@ -30,6 +32,8 @@ public partial class Game3D : Node3D
 	private int _kills;
 
 	private int _score;
+
+	private int _spawnCount;
 
 	private bool _running;
 
@@ -47,6 +51,10 @@ public partial class Game3D : Node3D
 		_strikerScene =
 			GD.Load<PackedScene>(
 				"res://Scenes3D/StrikerEnemy3D.tscn");
+
+		_heavyScene =
+			GD.Load<PackedScene>(
+				"res://Scenes3D/HeavyEnemy3D.tscn");
 
 		_bulletScene =
 			GD.Load<PackedScene>(
@@ -99,6 +107,8 @@ public partial class Game3D : Node3D
 
 		_score = 0;
 
+		_spawnCount = 0;
+
 		// OUR opening delay: spawn first enemy 1.5 seconds after game start.
 		_spawnTimer = 1.5f;
 
@@ -110,11 +120,14 @@ public partial class Game3D : Node3D
 
 	private void SpawnEnemy()
 	{
+		_spawnCount++;
+
 		PackedScene selectedScene =
-			// OUR progression: spawn Chasers while kills = 0..3; then Strikers.
-			_kills < 4
-				? _chaserScene
-				: _strikerScene;
+			// OUR pattern: spawns 3, 6, 9, ... are Heavies, regardless of kills.
+			// Other spawns retain the original Chaser-to-Striker progression.
+			_spawnCount % 3 == 0
+				? _heavyScene
+				: (_kills < 4 ? _chaserScene : _strikerScene);
 
 		Enemy3D enemy =
 			selectedScene.Instantiate<Enemy3D>();
