@@ -12,7 +12,7 @@ Godot loads Scenes3D/Main3D.tscn
      -> load reusable enemy/bullet scenes via GD.Load() [Godot]
      -> connect C# gameplay signals; StartGame() [Our logic]
 Each Godot physics tick:
-  -> Game3D._PhysicsProcess()       -> HUD / mixed spawning / crowd limit [Our rules]
+  -> Game3D._PhysicsProcess()       -> countdown / HUD / mixed spawning / crowd limit
   -> Player3D._PhysicsProcess()     -> WASD, motion, mouse aim, request shot
   -> Enemy3D._PhysicsProcess()      -> select behaviour, move, contact attack
      -> ChaserEnemy3D / StrikerEnemy3D / HeavyEnemy3D.UpdateBehaviour()
@@ -23,13 +23,14 @@ Each Godot physics tick:
 
 | Our class | Responsibility | Godot base class |
 | --- | --- | --- |
-| Game3D | Game state, mixed spawning, score, HUD, victory/defeat, retry | Node3D |
+| Game3D | 60-second round, mixed spawning, scoring, HUD, results, retry | Node3D |
 | Player3D | Movement, aim, fire cooldown, HP | CharacterBody3D |
 | Enemy3D | Shared enemy health, contact damage, signals | CharacterBody3D |
 | ChaserEnemy3D | Chasing movement and Chaser stats | Our Enemy3D |
 | StrikerEnemy3D | Ranged-attack AI and Striker stats | Our Enemy3D |
 | HeavyEnemy3D | Slow chasing movement and Heavy stats | Our Enemy3D |
 | Bullet3D | Bullet lifetime, movement, collision/damage | CharacterBody3D |
+| ScoreHistory | Local round records and top-five ranking | Plain C# helper |
 
 - `Player3D.ShotRequested` -> `Game3D.SpawnPlayerBullet()`
 - `Player3D.Died` -> `Game3D.EndWithDefeat()`
@@ -38,10 +39,14 @@ Each Godot physics tick:
 
 Godot's `[Signal]` and `EmitSignal()` mechanism is engine-provided; **the events,
 their meaning, and the handlers are designed in our code**. Game3D creates a
-small HUD showing HP, kills, score and round results, and accepts R to retry
-after the round ends. Status and outcomes also print to Godot's output panel.
+small HUD showing countdown, HP, kills, score and round results, and accepts R
+to retry after the round ends. Timeout or player death ends each round once,
+freezes actors and projectiles, and records the score through ScoreHistory.
+Status and outcomes also print to Godot's output panel.
 Movement, bullets, actor classes, signals and collision layers retain the
-original framework; no dash or new game mode is introduced.
+original framework. The ten-kill victory check is replaced by the one-minute
+score challenge. ScoreHistory saves every finished round to `user://score_history.json`
+and supplies the best five for the result screen.
 
 ## Collision configuration
 

@@ -1,16 +1,16 @@
 // TEACHING GUIDE: Game3D is OUR game coordinator; Node3D and PackedScene are GODOT.
 // GODOT API: _Ready, _PhysicsProcess, GD.Load, GetNode, Instantiate, AddChild.
-// OUR RULES: spawn mixed pairs after 1.5 s; win after 10 kills.
+// OUR RULES: mixed enemies in a 60-second score challenge; death ends the round early.
 // Cycle Chaser / Striker / Heavy, cap the crowd, and gently increase spawn tempo.
 // WORLD UNITS: speeds are Godot 3D units per second, not pixels per second.
 
 using Godot;
 using System;
+using System.Text;
 
 public partial class Game3D : Node3D
 {
-	// OUR victory condition: the player must defeat 10 enemies.
-	private const int TargetKills = 10;
+	private const double RoundDuration = 60.0;
 	private const int MaxActiveEnemies = 8;
 
 	private readonly RandomNumberGenerator _rng =
@@ -37,6 +37,8 @@ public partial class Game3D : Node3D
 	private int _spawnCount;
 
 	private bool _running;
+	private double _remainingTime;
+	private ScoreHistory _history = null!;
 
 	private Label _hud = null!;
 	private Label _result = null!;
@@ -71,6 +73,7 @@ public partial class Game3D : Node3D
 			GetNode<Player3D>("Player");
 
 		CreateHud();
+		_history = new ScoreHistory();
 
 		// OUR signal-based design: actors request actions; Game3D owns spawning.
 		_player.ShotRequested +=
@@ -85,10 +88,18 @@ public partial class Game3D : Node3D
 	public override void _PhysicsProcess(
 		double deltaValue)
 	{
-		UpdateHud();
-
 		if (!_running)
 		{
+			return;
+		}
+
+		// Count the full physics delta so slow frames do not extend the round.
+		_remainingTime = Math.Max(0.0, _remainingTime - Math.Max(0.0, deltaValue));
+		UpdateHud();
+		if (_remainingTime <= 0.000001)
+		{
+			_remainingTime = 0.0;
+			EndRound("TIME UP");
 			return;
 		}
 
@@ -121,6 +132,7 @@ public partial class Game3D : Node3D
 		_score = 0;
 
 		_spawnCount = 0;
+		_remainingTime = RoundDuration;
 
 		// OUR opening delay: spawn first enemy 1.5 seconds after game start.
 		_spawnTimer = 1.5f;
@@ -277,6 +289,8 @@ public partial class Game3D : Node3D
 		float speed,
 		float damage)
 	{
+		if (!_running) return;
+
 		Bullet3D bullet =
 			_bulletScene.Instantiate<Bullet3D>();
 
@@ -307,34 +321,55 @@ public partial class Game3D : Node3D
 		UpdateHud();
 
 		GD.Print(
-			$"Kills: {_kills}/{TargetKills}"
+			$"Kills: {_kills}"
 			+ $" | Score: {_score}");
-
-		if (_kills >= TargetKills)
-		{
-			_running = false;
-
-			_player.Active = false;
-
-			_result.Text = $"VICTORY!\nScore: {_score}\nPress R to play again";
-
-			GD.Print("VICTORY");
-		}
 	}
 
 	private void EndWithDefeat()
 	{
-		if (!_running)
-		{
-			return;
-		}
+		EndRound("GAME OVER");
+	}
 
+	private void EndRound(string reason)
+	{
+		// A round can finish only once, even if death and the timer happen together.
+		if (!_running) return;
 		_running = false;
+		_player.Active = false;
+		_player.Velocity = Vector3.Zero;
+		foreach (Node child in _entities.GetChildren()) child.SetPhysicsProcess(false);
 
+		RoundScore round = new()
+		{
+			Score = _score,
+			Kills = _kills,
+			SecondsPlayed = RoundDuration - _remainingTime,
+			PlayedAt = DateTime.Now,
+			Result = reason
+		};
+		bool saved = _history.Record(round);
+		int rank = _history.RankOf(round.Id);
+		StringBuilder summary = new();
+		summary.AppendLine(reason);
+		summary.AppendLine($"Score: {_score}   Kills: {_kills}   Time: {round.SecondsPlayed:0.0}s");
+		summary.AppendLine($"This run: #{rank}   |   PERSONAL TOP 5");
+		RoundScore[] leaders = _history.TopFive();
+		for (int i = 0; i < 5; i++)
+		{
+			if (i < leaders.Length)
+			{
+				RoundScore leader = leaders[i];
+				string marker = leader.Id == round.Id ? "  < YOU" : "";
+				summary.AppendLine($"{i + 1}.  {leader.Score} pts   |   {leader.Kills} kills   |   {leader.PlayedAt:MM/dd HH:mm}{marker}");
+			}
+			else summary.AppendLine($"{i + 1}.  ---");
+		}
+		summary.AppendLine(saved ? "Scores saved on this computer" : "Save unavailable: this session only");
+		summary.Append("Press R to play again");
+		// Godot Labels expect LF line breaks, including on Windows.
+		_result.Text = summary.ToString().Replace("\r\n", "\n");
 		UpdateHud();
-		_result.Text = $"GAME OVER\nKills: {_kills}/{TargetKills}  |  Score: {_score}\nPress R to retry";
-
-		GD.Print("GAME OVER!!!!");
+		GD.Print($"{reason} | Score: {_score} | Kills: {_kills} | Rank: {rank}");
 	}
 
 	public override void _UnhandledInput(InputEvent @event)
@@ -360,7 +395,7 @@ public partial class Game3D : Node3D
 		{
 			Name = "Controls",
 			Position = new Vector2(20f, 50f),
-			Text = "WASD: move  |  Mouse: aim / hold left to shoot\nRed: Chaser  |  Pink: Striker  |  Purple: Heavy (9 hits)"
+			Text = "60-second score challenge  |  WASD: move  |  Mouse: aim / hold left to shoot\nRed: 100 pts  |  Pink: 180 pts  |  Purple: 300 pts (9 hits)"
 		};
 		StyleHudLabel(hint, 17);
 		layer.AddChild(hint);
@@ -371,7 +406,7 @@ public partial class Game3D : Node3D
 			HorizontalAlignment = HorizontalAlignment.Center,
 			VerticalAlignment = VerticalAlignment.Center
 		};
-		StyleHudLabel(_result, 36);
+		StyleHudLabel(_result, 26);
 		layer.AddChild(_result);
 		_result.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
 	}
@@ -386,9 +421,11 @@ public partial class Game3D : Node3D
 
 	private void UpdateHud()
 	{
-		_hud.Text = $"HP: {_player.Health:0}/100    Kills: {_kills}/{TargetKills}    Score: {_score}";
+		int seconds = (int)Math.Ceiling(_remainingTime);
+		_hud.Text = $"Time: {seconds / 60:00}:{seconds % 60:00}    HP: {_player.Health:0}/100    Kills: {_kills}    Score: {_score}";
 		_hud.AddThemeColorOverride("font_color",
-			_player.Health <= 35f ? new Color(1f, 0.45f, 0.4f) : Colors.White);
+			_player.Health <= 35f || _remainingTime <= 10.0
+				? new Color(1f, 0.45f, 0.4f) : Colors.White);
 	}
 
 	private void ClearEntities()
