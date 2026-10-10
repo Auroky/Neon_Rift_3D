@@ -15,6 +15,8 @@ func run():
 	await create_timer(0.2).timeout
 	Input.action_release("move_right")
 	assert(player.position.x > start.x + 0.5, "Movement must work")
+	# Combat below is driven by explicit signals, not the user's live mouse state.
+	player.set_physics_process(false)
 	player.call("ResetPlayer", Vector3(0,0.5,0))
 	await create_timer(4.2).timeout
 	game.set_physics_process(false)

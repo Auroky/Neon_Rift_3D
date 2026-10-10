@@ -32,8 +32,8 @@ legacy assembly name is **not** the current gameplay stage or dimension.
 | Chaser | 38 HP, 2.0 units/s, 14 contact damage, 100 score | `ChaserEnemy3D.cs` |
 | Chaser stopping distance | 1.0 world unit | `ChaserEnemy3D.cs` |
 | Striker | 72 HP, 3.2 units/s, 22 contact damage, 180 score | `StrikerEnemy3D.cs` |
-| Striker preferred distance | 4.5–6.5 world units | `StrikerEnemy3D.cs` |
-| Striker fire | First at 1.0 s, then every 1.6 s if within 12 units | `StrikerEnemy3D.cs` |
+| Striker preferred distance | 4.5–6.5 world units; strafe inside this band | `StrikerEnemy3D.cs` |
+| Striker fire | First at 1.2 s, then every 1.45 s if within 12 units | `StrikerEnemy3D.cs` |
 | Heavy | 200 HP, 1.2 units/s, 35 contact damage, 300 score; nine player bullets to destroy | `HeavyEnemy3D.cs` |
 | Score history | Save completed rounds to `user://score_history.json`; show top five | `ScoreHistory.cs` |
 | Enemy contact | Up to 1 hit per 0.6 s within 1.1 units | `Enemy3D.cs` |
@@ -46,7 +46,7 @@ and win/lose conditions are **our own design**.
 ## Week 8 GitHub collaboration
 
 **Student A**: edit `Scripts3D/StrikerEnemy3D.cs` — change the shooting
-interval from `1.6f` to `1.2f`; also update the corresponding comment.
+interval from `1.45f` to `1.2f`; also update the corresponding comment.
 
 **Student B**: edit `Scripts3D/Player3D.cs` — change the player speed
 from `7f` to `8.5f`; also update the corresponding comment.
@@ -69,3 +69,10 @@ so the test never writes to the player's score history. The test refuses to run
 against a normal or previously populated save directory. It checks movement,
 all three enemy spawns, bullet collisions, heavy health, score, timeout, death,
 R-to-restart and saved leaderboard reload. Success prints `REPAIR_RUNTIME_CHECK_OK`.
+
+After resource import, `Tests/resource_check.gd` verifies scene dependencies and
+reports any unused assets under `Assets/`. Run it with
+`--headless --path . --script Tests/resource_check.gd`.
+`Tests/visual_preview.gd` renders the actual actor scenes
+in a paused arrangement to `.godot/visual_preview.png`; it needs a graphical renderer.
+These test scripts are not part of normal gameplay.

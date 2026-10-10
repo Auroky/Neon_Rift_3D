@@ -2,7 +2,23 @@
 
 This is a **3D** Godot 4 C# project. `Node3D`, `CharacterBody3D`, `Camera3D`,
 `PackedScene`, input handling, collision functions, and the engine lifecycle are
-**Godot-provided APIs**. The six classes in `Scripts3D/` are **our own C# code**.
+**Godot-provided APIs**. The classes in `Scripts3D/` are **our own C# code**.
+
+## Project layout
+
+- `Scenes3D/Main3D.tscn`: camera, lighting, playable floor and collision bounds.
+- `Scenes3D/ArenaDetails.tscn`: decorative platform, railings, sign, barrels and trees.
+- Other `Scenes3D/*.tscn`: reusable player, enemy and bullet scenes.
+- `Scripts3D/`: gameplay, round coordination and score persistence.
+- `Assets/Arena/PaintedYard.gdshader`: pale sand floor and subtle wear.
+- `Assets/Tanks/`: two self-contained GLB models, four active color textures and `TankReadable.gdshader`.
+  This shared shader provides neutral fill lighting. Only the Striker scene enables
+  the purple armor palette; the Heavy uses its original gray texture. No outline pass.
+  The GLBs preserve the supplied FBX geometry, normals, UVs and transforms, while
+  omitting obsolete material references to missing auxiliary textures. Materials
+  are assigned by actor scenes. Import sidecars and script/shader UIDs are required metadata.
+- `Tests/`: gameplay regression, resource dependency audit and deterministic visual preview.
+- `.godot/`: ignored, regenerable editor/build caches and current verification output.
 
 ## Main flow
 
@@ -38,9 +54,9 @@ Each Godot physics tick:
 - `Enemy3D.Destroyed` -> `Game3D.OnEnemyDestroyed()`
 
 Godot's `[Signal]` and `EmitSignal()` mechanism is engine-provided; **the events,
-their meaning, and the handlers are designed in our code**. No HUD or dash
-mechanics are implemented in this Week 8 3D demo. Status and outcomes are
-printed to Godot's output panel.
+their meaning, and the handlers are designed in our code**. `Game3D` creates the
+HUD, round results and restart controls. Status and outcomes are also printed
+to Godot's output panel. Player score history lives in `user://`, outside the project.
 
 ## Collision configuration
 
@@ -60,6 +76,3 @@ sets each bullet's mask dynamically to hit the world plus the opposing team.
 
 The coordinate system is 3D, with movement restricted to the **XZ plane**;
 Y is vertical. `Vector3` and `CharacterBody3D` are appropriate here.
-**MD5 is a cryptographic hash algorithm, not a Godot 3D movement/model class.**
-There is no MD5 reference in this project; it should not be confused with 3D,
-`Node3D`, or `CharacterBody3D`.

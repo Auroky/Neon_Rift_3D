@@ -9,10 +9,6 @@
 [sub_resource type="ShaderMaterial" id="YardMaterial"]
 shader = ExtResource("3_yard")
 
-[sub_resource type="StandardMaterial3D" id="WallMaterial"]
-albedo_color = Color(0.21, 0.12, 0.21, 1)
-roughness = 0.82
-
 [sub_resource type="Environment" id="ArenaEnvironment"]
 background_mode = 1
 background_color = Color(0.30, 0.57, 0.70, 1)
@@ -29,30 +25,14 @@ size = Vector3(20, 0.2, 14)
 [sub_resource type="BoxShape3D" id="BoxShape3D_xtwny"]
 size = Vector3(20, 0.2, 14)
 
-[sub_resource type="BoxMesh" id="BoxMesh_8g2br"]
-material = SubResource("WallMaterial")
-size = Vector3(20, 0.65, 0.3)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_g0dev"]
 size = Vector3(20, 2, 0.3)
-
-[sub_resource type="BoxMesh" id="BoxMesh_y760c"]
-material = SubResource("WallMaterial")
-size = Vector3(20, 0.65, 0.3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_vn63g"]
 size = Vector3(20, 2, 0.3)
 
-[sub_resource type="BoxMesh" id="BoxMesh_mtyku"]
-material = SubResource("WallMaterial")
-size = Vector3(0.3, 0.65, 14)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_l65bb"]
 size = Vector3(0.3, 2, 14)
-
-[sub_resource type="BoxMesh" id="BoxMesh_676ko"]
-material = SubResource("WallMaterial")
-size = Vector3(0.3, 0.65, 14)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_f7vvs"]
 size = Vector3(0.3, 2, 14)
@@ -78,11 +58,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -7)
 collision_layer = 8
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/NorthWall" unique_id=1160922548]
-visible = false
-position = Vector3(0, -0.675, 0)
-mesh = SubResource("BoxMesh_8g2br")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/NorthWall" unique_id=1162548340]
 shape = SubResource("BoxShape3D_g0dev")
 
@@ -90,11 +65,6 @@ shape = SubResource("BoxShape3D_g0dev")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 7)
 collision_layer = 8
 collision_mask = 0
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/SouthWall" unique_id=383052883]
-visible = false
-position = Vector3(0, -0.675, 0)
-mesh = SubResource("BoxMesh_y760c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/SouthWall" unique_id=1257493403]
 shape = SubResource("BoxShape3D_vn63g")
@@ -104,11 +74,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1, 0)
 collision_layer = 8
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/EastWall" unique_id=1103534120]
-visible = false
-position = Vector3(0, -0.675, 0)
-mesh = SubResource("BoxMesh_mtyku")
-
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/EastWall" unique_id=1437570498]
 shape = SubResource("BoxShape3D_l65bb")
 
@@ -116,11 +81,6 @@ shape = SubResource("BoxShape3D_l65bb")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 0)
 collision_layer = 8
 collision_mask = 0
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Arena/WestWall" unique_id=975890770]
-visible = false
-position = Vector3(0, -0.675, 0)
-mesh = SubResource("BoxMesh_676ko")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Arena/WestWall" unique_id=367185987]
 shape = SubResource("BoxShape3D_f7vvs")
@@ -137,7 +97,7 @@ fov = 60.0
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=659561289]
 rotation = Vector3(-0.72, 2.6, 0)
-light_color = Color(1, 0.79, 0.58, 1)
+light_color = Color(1, 0.96, 0.86, 1)
 light_energy = 0.85
 shadow_enabled = true
 directional_shadow_max_distance = 38.0

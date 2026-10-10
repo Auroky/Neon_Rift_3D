@@ -1,13 +1,17 @@
 [gd_scene format=3 uid="uid://ojki603f8540"]
 
 [ext_resource type="Script" uid="uid://b2bjrv2big0q3" path="res://Scripts3D/ChaserEnemy3D.cs" id="1_bk4j3"]
+[ext_resource type="PackedScene" uid="uid://bp10kmaox3nd4" path="res://Assets/Tanks/Tank1.glb" id="2_tank"]
+[ext_resource type="Texture2D" uid="uid://d2e8pg57ltayv" path="res://Assets/Tanks/tripo_model_basecolor3.png" id="3_texture"]
+[ext_resource type="Shader" uid="uid://25eoerutsv83" path="res://Assets/Tanks/TankReadable.gdshader" id="4_readable"]
 
-[ext_resource type="PackedScene" path="res://Assets/Tanks/Tank1.fbx" id="2_tank"]
-[ext_resource type="Texture2D" path="res://Assets/Tanks/tripo_model_basecolor3.png" id="3_texture"]
-
-[sub_resource type="StandardMaterial3D" id="TankMaterial"]
-roughness = 0.85
-albedo_texture = ExtResource("3_texture")
+[sub_resource type="ShaderMaterial" id="TankMaterial"]
+render_priority = 0
+shader = ExtResource("4_readable")
+shader_parameter/base_color = ExtResource("3_texture")
+shader_parameter/scene_light_weight = 0.22
+shader_parameter/armor_palette_weight = 0.0
+shader_parameter/armor_color = Color(0.4, 0.18, 0.53, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_le8mc"]
 size = Vector3(0.8, 0.6, 0.8)
@@ -17,12 +21,10 @@ collision_layer = 2
 collision_mask = 8
 script = ExtResource("1_bk4j3")
 
-[node name="TankVisual" parent="." instance=ExtResource("2_tank")]
-position = Vector3(0, -0.134387, 0)
-rotation = Vector3(0, 1.5707963, 0)
-scale = Vector3(0.63, 0.63, 0.63)
+[node name="TankVisual" parent="." unique_id=1456457208 instance=ExtResource("2_tank")]
+transform = Transform3D(4.7563677e-08, 0, 0.63, 0, 0.63, 0, -0.63, 0, 4.7563677e-08, 0, -0.134387, 0)
 
-[node name="tripo_node_e2bcb839" parent="TankVisual" index="0"]
+[node name="tripo_node_e2bcb839" parent="TankVisual" index="0" unique_id=1309718529]
 material_override = SubResource("TankMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=276194387]
