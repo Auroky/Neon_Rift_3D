@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts3D/HeavyEnemy3D.cs" id="1_heavy"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_heavy"]
+albedo_color = Color(0.25, 0.06, 0.4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_heavy"]
+material = SubResource("StandardMaterial3D_heavy")
+size = Vector3(1.2, 1, 1.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_heavy"]
+size = Vector3(1.2, 1, 1.2)
+
+[node name="HeavyEnemy" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 8
+script = ExtResource("1_heavy")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_heavy")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_heavy")
