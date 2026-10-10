@@ -1,7 +1,7 @@
 // TEACHING GUIDE: Game3D is OUR game coordinator; Node3D and PackedScene are GODOT.
 // GODOT API: _Ready, _PhysicsProcess, GD.Load, GetNode, Instantiate, AddChild.
-// OUR RULES: first spawn at 1.5 s, then every 2.5 s; win after 10 kills;
-// every third spawn is a Heavy; other spawns become Strikers after four kills.
+// OUR RULES: spawn mixed pairs after 1.5 s; win after 10 kills.
+// Cycle Chaser / Striker / Heavy, cap the crowd, and gently increase spawn tempo.
 // WORLD UNITS: speeds are Godot 3D units per second, not pixels per second.
 
 using Godot;
@@ -11,6 +11,7 @@ public partial class Game3D : Node3D
 {
 	// OUR victory condition: the player must defeat 10 enemies.
 	private const int TargetKills = 10;
+	private const int MaxActiveEnemies = 8;
 
 	private readonly RandomNumberGenerator _rng =
 		new();
@@ -36,6 +37,9 @@ public partial class Game3D : Node3D
 	private int _spawnCount;
 
 	private bool _running;
+
+	private Label _hud = null!;
+	private Label _result = null!;
 
 	// GODOT lifecycle callback, called when this scene enters the tree.
 	public override void _Ready()
@@ -66,6 +70,8 @@ public partial class Game3D : Node3D
 		_player =
 			GetNode<Player3D>("Player");
 
+		CreateHud();
+
 		// OUR signal-based design: actors request actions; Game3D owns spawning.
 		_player.ShotRequested +=
 			SpawnPlayerBullet;
@@ -79,6 +85,8 @@ public partial class Game3D : Node3D
 	public override void _PhysicsProcess(
 		double deltaValue)
 	{
+		UpdateHud();
+
 		if (!_running)
 		{
 			return;
@@ -92,10 +100,15 @@ public partial class Game3D : Node3D
 
 		if (_spawnTimer <= 0f)
 		{
-			SpawnEnemy();
+			// OUR small mixed groups: leave space to dodge rather than flood the arena.
+			int spaces = MaxActiveEnemies - CountActiveEnemies();
+			for (int i = 0; i < Math.Min(2, spaces); i++)
+			{
+				SpawnEnemy();
+			}
 
-			// OUR spawning interval: one enemy every 2.5 seconds.
-			_spawnTimer = 2.5f;
+			// OUR pacing: 2.5 s initially, 2.1 s at four kills, 1.8 s at eight.
+			_spawnTimer = _kills >= 8 ? 1.8f : (_kills >= 4 ? 2.1f : 2.5f);
 		}
 	}
 
@@ -116,6 +129,9 @@ public partial class Game3D : Node3D
 
 		_player.ResetPlayer(
 			new Vector3(0f, 0.5f, 0f));
+
+		_result.Text = "";
+		UpdateHud();
 	}
 
 	private void SpawnEnemy()
@@ -123,19 +139,17 @@ public partial class Game3D : Node3D
 		_spawnCount++;
 
 		PackedScene selectedScene =
-			// OUR pattern: spawns 3, 6, 9, ... are Heavies, regardless of kills.
-			// Other spawns retain the original Chaser-to-Striker progression.
+			// OUR mixed pattern keeps all three roles throughout the round.
 			_spawnCount % 3 == 0
 				? _heavyScene
-				: (_kills < 4 ? _chaserScene : _strikerScene);
+				: (_spawnCount % 3 == 1 ? _chaserScene : _strikerScene);
 
 		Enemy3D enemy =
 			selectedScene.Instantiate<Enemy3D>();
 
 		_entities.AddChild(enemy);
 
-		enemy.GlobalPosition =
-			RandomArenaEdgePosition();
+		enemy.GlobalPosition = SafeArenaEdgePosition();
 
 		enemy.Configure(_player);
 
@@ -144,6 +158,51 @@ public partial class Game3D : Node3D
 
 		enemy.ShotRequested +=
 			SpawnEnemyBullet;
+	}
+
+	private int CountActiveEnemies()
+	{
+		int count = 0;
+		foreach (Node child in _entities.GetChildren())
+		{
+			if (child is Enemy3D enemy && !enemy.IsQueuedForDeletion())
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private Vector3 SafeArenaEdgePosition()
+	{
+		// Avoid appearing on top of the player or stacking a fresh pair together.
+		Vector3 best = Vector3.Zero;
+		float bestClearance = -1f;
+		for (int attempt = 0; attempt < 12; attempt++)
+		{
+			Vector3 candidate = RandomArenaEdgePosition();
+			float playerDistance = candidate.DistanceTo(_player.GlobalPosition);
+			float clearance = playerDistance;
+			foreach (Node child in _entities.GetChildren())
+			{
+				if (child is Enemy3D enemy && !enemy.IsQueuedForDeletion()
+					&& enemy.Health > 0f)
+				{
+					clearance = Math.Min(clearance,
+						candidate.DistanceTo(enemy.GlobalPosition) * 2f);
+				}
+			}
+			if (clearance > bestClearance)
+			{
+				best = candidate;
+				bestClearance = clearance;
+			}
+			if (playerDistance >= 4f && clearance >= 4f)
+			{
+				return candidate;
+			}
+		}
+		return best;
 	}
 
 	private Vector3 RandomArenaEdgePosition()
@@ -245,6 +304,8 @@ public partial class Game3D : Node3D
 
 		_score += points;
 
+		UpdateHud();
+
 		GD.Print(
 			$"Kills: {_kills}/{TargetKills}"
 			+ $" | Score: {_score}");
@@ -254,6 +315,8 @@ public partial class Game3D : Node3D
 			_running = false;
 
 			_player.Active = false;
+
+			_result.Text = $"VICTORY!\nScore: {_score}\nPress R to play again";
 
 			GD.Print("VICTORY");
 		}
@@ -268,7 +331,64 @@ public partial class Game3D : Node3D
 
 		_running = false;
 
+		UpdateHud();
+		_result.Text = $"GAME OVER\nKills: {_kills}/{TargetKills}  |  Score: {_score}\nPress R to retry";
+
 		GD.Print("GAME OVER!!!!");
+	}
+
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!_running && @event is InputEventKey key
+			&& key.Pressed && !key.Echo && key.Keycode == Key.R)
+		{
+			StartGame();
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
+	private void CreateHud()
+	{
+		CanvasLayer layer = new() { Name = "Hud" };
+		AddChild(layer);
+
+		_hud = new Label { Name = "Stats", Position = new Vector2(20f, 14f) };
+		StyleHudLabel(_hud, 24);
+		layer.AddChild(_hud);
+
+		Label hint = new()
+		{
+			Name = "Controls",
+			Position = new Vector2(20f, 50f),
+			Text = "WASD: move  |  Mouse: aim / hold left to shoot\nRed: Chaser  |  Pink: Striker  |  Purple: Heavy (9 hits)"
+		};
+		StyleHudLabel(hint, 17);
+		layer.AddChild(hint);
+
+		_result = new Label
+		{
+			Name = "Result",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		StyleHudLabel(_result, 36);
+		layer.AddChild(_result);
+		_result.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+	}
+
+	private static void StyleHudLabel(Label label, int fontSize)
+	{
+		label.MouseFilter = Control.MouseFilterEnum.Ignore;
+		label.AddThemeFontSizeOverride("font_size", fontSize);
+		label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
+		label.AddThemeConstantOverride("outline_size", 5);
+	}
+
+	private void UpdateHud()
+	{
+		_hud.Text = $"HP: {_player.Health:0}/100    Kills: {_kills}/{TargetKills}    Score: {_score}";
+		_hud.AddThemeColorOverride("font_color",
+			_player.Health <= 35f ? new Color(1f, 0.45f, 0.4f) : Colors.White);
 	}
 
 	private void ClearEntities()

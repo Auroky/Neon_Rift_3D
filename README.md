@@ -8,10 +8,11 @@ Godot APIs, and GitHub collaboration. All source-code comments are in English.
 1. Open this directory as a project in a compatible Godot 4 .NET editor.
 2. Build the C# project in Godot, then run `Scenes3D/Main3D.tscn`.
 3. Use **W/A/S/D** to move; **move the mouse** to aim; hold **left mouse button** to shoot.
-4. Observe kills, score, victory, and defeat messages in the **Godot Output panel**.
+4. Watch HP, kills and score on screen. After victory or defeat, press **R** to retry.
+   The **Godot Output panel** also prints kills, score and outcomes.
 
-The project targets `Godot.NET.Sdk/4.7.2` and `net8.0` as in the supplied
-project. The assembly is named `NeonRiftStage1` for compatibility; this
+The project targets `Godot.NET.Sdk/4.7.1` and `net8.0` to match the local
+editor. The assembly is named `NeonRiftStage1` for compatibility; this
 legacy assembly name is **not** the current gameplay stage or dimension.
 
 ## Game rules (values defined by our C# code)
@@ -19,9 +20,10 @@ legacy assembly name is **not** the current gameplay stage or dimension.
 | Rule | Value | File |
 | --- | --- | --- |
 | Victory | Defeat 10 enemies | `Game3D.cs` |
-| Initial enemy spawn | 1.5 s after start | `Game3D.cs` |
-| Subsequent spawns | Every 2.5 s | `Game3D.cs` |
-| Enemy progression | Chasers while kills < 4; Strikers from 4 onward | `Game3D.cs` |
+| Initial enemy spawn | Mixed pair 1.5 s after start | `Game3D.cs` |
+| Subsequent spawns | Up to two per group; every 2.5 s, 2.1 s at 4 kills, 1.8 s at 8 kills | `Game3D.cs` |
+| Enemy mix | Cycle Chaser, Striker, Heavy throughout the round | `Game3D.cs` |
+| Crowd limit | At most 8 active enemies; prefer positions away from the player and other enemies | `Game3D.cs` |
 | Player max health | 100 HP | `Player3D.cs` |
 | Player movement | 7 world units/s | `Player3D.cs` |
 | Player firing rate | 5 shots/s (0.2 s apart) | `Player3D.cs` |
@@ -31,8 +33,10 @@ legacy assembly name is **not** the current gameplay stage or dimension.
 | Chaser | 38 HP, 2.0 units/s, 14 contact damage, 100 score | `ChaserEnemy3D.cs` |
 | Chaser stopping distance | 1.0 world unit | `ChaserEnemy3D.cs` |
 | Striker | 72 HP, 3.2 units/s, 22 contact damage, 180 score | `StrikerEnemy3D.cs` |
-| Striker preferred distance | 4.5–6.5 world units | `StrikerEnemy3D.cs` |
-| Striker fire | First at 1.0 s, then every 1.6 s if within 12 units | `StrikerEnemy3D.cs` |
+| Striker preferred distance | 4.5–6.5 world units; strafe at 1.1 units/s inside that band | `StrikerEnemy3D.cs` |
+| Striker fire | First at 1.2 s, then every 1.45 s if within 12 units | `StrikerEnemy3D.cs` |
+| Heavy | 200 HP, 1.2 units/s, 35 contact damage, 300 score; 9 player hits to destroy | `HeavyEnemy3D.cs` |
+| HUD / retry | HP, kills, score, results; R restarts after the round ends | `Game3D.cs` |
 | Enemy contact | Up to 1 hit per 0.6 s within 1.1 units | `Enemy3D.cs` |
 
 **Engine vs user code:** `Node3D`, `CharacterBody3D`, `Vector3`,

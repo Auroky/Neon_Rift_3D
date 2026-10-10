@@ -1,13 +1,14 @@
 // TEACHING GUIDE: StrikerEnemy3D is OUR subclass of OUR Enemy3D class.
 // GODOT API: Vector3, Velocity. OUR RULE: keep 4.5–6.5 units from the player;
-// fire every 1.6 seconds when within 12 units (first shot after 1 second).
+// strafe in that band; fire every 1.45 seconds within 12 units (first after 1.2 s).
 
 using Godot;
 
 public partial class StrikerEnemy3D : Enemy3D
 {
-	// OUR rule: the initial shot delay is 1.0 s, then 1.6 s per shot.
-	private float _shootTimer = 1f;
+	// OUR opening delay gives the player time to see each newly spawned Striker.
+	private float _shootTimer = 1.2f;
+	private float _strafeDirection = 1f;
 
 	protected override void ConfigureStats()
 	{
@@ -19,6 +20,9 @@ public partial class StrikerEnemy3D : Enemy3D
 		ContactDamage = 22f;
 
 		Points = 180;
+
+		_shootTimer = 1.2f;
+		_strafeDirection = GlobalPosition.Z >= 0f ? 1f : -1f;
 	}
 
 	protected override void UpdateBehaviour(
@@ -42,8 +46,9 @@ public partial class StrikerEnemy3D : Enemy3D
 		}
 		else
 		{
-			Velocity =
-				Vector3.Zero;
+			// OUR lateral movement makes the player adjust aim while dodging shots.
+			Vector3 sideways = new(-direction.Z, 0f, direction.X);
+			Velocity = sideways * (1.1f * _strafeDirection);
 		}
 
 		_shootTimer -= delta;
@@ -54,7 +59,7 @@ public partial class StrikerEnemy3D : Enemy3D
 		{
 			RequestShot(direction);
 
-			_shootTimer = 1.6f;
+			_shootTimer = 1.45f;
 		}
 	}
 }
