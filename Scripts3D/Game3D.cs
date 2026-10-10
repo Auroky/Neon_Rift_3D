@@ -255,7 +255,97 @@ public partial class Game3D : Node3D
 
 		_running = false;
 
+<<<<<<< Updated upstream
 		GD.Print("GAME OVER!!!!");
+=======
+		RoundScore round = new()
+		{
+			Score = _score,
+			Kills = _kills,
+			SecondsPlayed = RoundDuration - _remainingTime,
+			PlayedAt = DateTime.Now,
+			Result = reason
+		};
+		bool saved = _history.Record(round);
+		int rank = _history.RankOf(round.Id);
+		StringBuilder summary = new();
+		summary.AppendLine(reason);
+		summary.AppendLine($"Score: {_score}   Kills: {_kills}   Time: {round.SecondsPlayed:0.0}s");
+		summary.AppendLine($"This run: #{rank}   |   PERSONAL TOP 5");
+		RoundScore[] leaders = _history.TopFive();
+		for (int i = 0; i < 5; i++)
+		{
+			if (i < leaders.Length)
+			{
+				RoundScore leader = leaders[i];
+				string marker = leader.Id == round.Id ? "  < YOU" : "";
+				summary.AppendLine($"{i + 1}.  {leader.Score} pts   |   {leader.Kills} kills   |   {leader.PlayedAt:MM/dd HH:mm}{marker}");
+			}
+			else summary.AppendLine($"{i + 1}.  ---");
+		}
+		summary.AppendLine(saved ? "Scores saved on this computer" : "Save unavailable: this session only");
+		summary.Append("Press R to play again");
+		// Godot Labels expect LF line breaks, including on Windows.
+		_result.Text = summary.ToString().Replace("\r\n", "\n");
+		UpdateHud();
+		GD.Print($"{reason} | Score: {_score} | Kills: {_kills} | Rank: {rank}");
+	}
+
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		if (!_running && @event is InputEventKey key
+			&& key.Pressed && !key.Echo && key.Keycode == Key.R)
+		{
+			StartGame();
+			GetViewport().SetInputAsHandled();
+		}
+	}
+
+	private void CreateHud()
+	{
+		CanvasLayer layer = new() { Name = "Hud" };
+		AddChild(layer);
+
+		_hud = new Label { Name = "Stats", Position = new Vector2(20f, 14f) };
+		StyleHudLabel(_hud, 24);
+		layer.AddChild(_hud);
+
+		Label hint = new()
+		{
+			Name = "Controls",
+			Position = new Vector2(20f, 50f),
+			Text = "60-second score challenge  |  WASD: move  |  Mouse: aim / hold left to shoot\nRed: 100 pts  |  Purple: 180 pts  |  Heavy (blue-gray): 300 pts (9 hits)"
+		};
+		StyleHudLabel(hint, 17);
+		layer.AddChild(hint);
+
+		_result = new Label
+		{
+			Name = "Result",
+			HorizontalAlignment = HorizontalAlignment.Center,
+			VerticalAlignment = VerticalAlignment.Center
+		};
+		StyleHudLabel(_result, 26);
+		layer.AddChild(_result);
+		_result.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+	}
+
+	private static void StyleHudLabel(Label label, int fontSize)
+	{
+		label.MouseFilter = Control.MouseFilterEnum.Ignore;
+		label.AddThemeFontSizeOverride("font_size", fontSize);
+		label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
+		label.AddThemeConstantOverride("outline_size", 5);
+	}
+
+	private void UpdateHud()
+	{
+		int seconds = (int)Math.Ceiling(_remainingTime);
+		_hud.Text = $"Time: {seconds / 60:00}:{seconds % 60:00}    HP: {_player.Health:0}/100    Kills: {_kills}    Score: {_score}";
+		_hud.AddThemeColorOverride("font_color",
+			_player.Health <= 35f || _remainingTime <= 10.0
+				? new Color(1f, 0.45f, 0.4f) : Colors.White);
+>>>>>>> Stashed changes
 	}
 
 	private void ClearEntities()
