@@ -1,5 +1,6 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_disabled;
+uniform float hit_flash : hint_range(0.0, 1.0) = 0.0;
 
 uniform sampler2D base_color : source_color, filter_linear_mipmap, repeat_enable;
 uniform float scene_light_weight : hint_range(0.0, 1.0) = 0.22;
@@ -19,6 +20,7 @@ void fragment() {
 	vec3 armored = mix(vec3(0.023, 0.027, 0.033), armor_color.rgb, armor_mask);
 	armored *= 0.55 + value * 0.9;
 	color = mix(color, armored, armor_palette_weight);
+	color = mix(color, vec3(1.0, 0.94, 0.82), hit_flash * 0.85);
 	// Neutral fill preserves team colors in purple shadows; the normal-based
 	// gradient retains turret and track volume even without direct scene light.
 	float shape = 0.80 + 0.20 * max(dot(normalize(world_normal), normalize(vec3(-0.4, 0.85, 0.3))), 0.0);

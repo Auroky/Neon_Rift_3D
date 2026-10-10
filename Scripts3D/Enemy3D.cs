@@ -38,6 +38,15 @@ public abstract partial class Enemy3D
 	private bool _dead;
 
 	private float _contactCooldown;
+	private ActorFeedback3D _visuals = null!;
+
+	public override void _Ready()
+	{
+		Color accent = this is HeavyEnemy3D ? new Color("a6c1d8")
+			: this is StrikerEnemy3D ? new Color("c39df8") : new Color("ff887f");
+		string title = this is HeavyEnemy3D ? "HEAVY" : this is StrikerEnemy3D ? "STRIKER" : "CHASER";
+		_visuals = ActorFeedback3D.Attach(this, () => Health, () => MaxHealth, title, accent);
+	}
 
 	public void Configure(Player3D target)
 	{
@@ -113,6 +122,7 @@ public abstract partial class Enemy3D
 		Health = Math.Max(
 			0f,
 			Health - damage);
+		_visuals?.Hit();
 
 		if (Health <= 0f)
 		{
@@ -146,6 +156,7 @@ public abstract partial class Enemy3D
 	private void Die()
 	{
 		_dead = true;
+		TankExplosion3D.Spawn(this, _visuals.Accent, this is HeavyEnemy3D);
 
 		EmitSignal(
 			SignalName.Destroyed,

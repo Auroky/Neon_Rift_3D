@@ -9,13 +9,21 @@ Godot APIs, and GitHub collaboration. All source-code comments are in English.
 2. Build the C# project in Godot, then run `Scenes3D/Main3D.tscn`.
 3. Use **W/A/S/D** to move; **move the mouse** to aim; hold **left mouse button** to shoot.
 4. Watch the 60-second countdown, HP, kills and score on screen. Timeout or death
-   ends the round and displays the saved top-five leaderboard. Press **R** to retry.
+   ends the round and displays the saved top-five leaderboard. Press **R** or click
+   **PLAY AGAIN** to retry.
 
-The project targets `Godot.NET.Sdk/4.7.2` and `net8.0` as in the supplied
+The project targets `Godot.NET.Sdk/4.7.1` and `net8.0` as in the supplied
 project. The assembly is named `NeonRiftStage1` for compatibility; this
 legacy assembly name is **not** the current gameplay stage or dimension.
 
 ## Game rules (values defined by our C# code)
+
+The presentation uses plum instrument panels, mint player health, amber time/score,
+colored enemy badges and a card-based results table. Player and enemies have
+camera-projected overhead HP bars with a trailing damage indicator. Valid hits
+briefly flash the struck tank's private material; destroyed enemies leave sparks,
+an expanding blast ring and fading smoke. These visual helpers contain no damage,
+collision, AI or score rules; the arena and tank models are unchanged.
 
 | Rule | Value | File |
 | --- | --- | --- |
@@ -76,3 +84,10 @@ reports any unused assets under `Assets/`. Run it with
 `Tests/visual_preview.gd` renders the actual actor scenes
 in a paused arrangement to `.godot/visual_preview.png`; it needs a graphical renderer.
 These test scripts are not part of normal gameplay.
+
+`Tests/presentation_check.gd` checks real HP fractions, exactly-once non-colliding
+explosions, automatic cleanup, five recorded rounds and button restart. Use a fresh
+`APPDATA` directory containing `presentation-test-user`. With a graphical renderer,
+append `-- --capture-dir C:/absolute/output` to save combat and results PNGs there.
+The screenshots use completed test rounds in that disposable directory, not the
+player's real score history. Success prints `PRESENTATION_CHECK_OK`.

@@ -9,7 +9,7 @@ This is a **3D** Godot 4 C# project. `Node3D`, `CharacterBody3D`, `Camera3D`,
 - `Scenes3D/Main3D.tscn`: camera, lighting, playable floor and collision bounds.
 - `Scenes3D/ArenaDetails.tscn`: decorative platform, railings, sign, barrels and trees.
 - Other `Scenes3D/*.tscn`: reusable player, enemy and bullet scenes.
-- `Scripts3D/`: gameplay, round coordination and score persistence.
+- `Scripts3D/`: gameplay, round coordination, score persistence and presentation helpers.
 - `Assets/Arena/PaintedYard.gdshader`: pale sand floor and subtle wear.
 - `Assets/Tanks/`: two self-contained GLB models, four active color textures and `TankReadable.gdshader`.
   This shared shader provides neutral fill lighting. Only the Striker scene enables
@@ -47,6 +47,9 @@ Each Godot physics tick:
 | HeavyEnemy3D | Slow chasing, 200 HP and Heavy stats | Our Enemy3D |
 | ScoreHistory | Persistent round scores and top-five ranking | Plain C# class |
 | Bullet3D | Bullet lifetime, movement, collision/damage | CharacterBody3D |
+| CombatHud | Styled dashboard and results; restart invokes Game3D's existing StartGame | CanvasLayer |
+| ActorFeedback3D | Read-only HP projection and per-instance hit flash | Node3D |
+| TankExplosion3D | Non-colliding blast, debris and smoke; frees after 1.15 seconds | Node3D |
 
 - `Player3D.ShotRequested` -> `Game3D.SpawnPlayerBullet()`
 - `Player3D.Died` -> `Game3D.EndWithDefeat()`
@@ -57,6 +60,14 @@ Godot's `[Signal]` and `EmitSignal()` mechanism is engine-provided; **the events
 their meaning, and the handlers are designed in our code**. `Game3D` creates the
 HUD, round results and restart controls. Status and outcomes are also printed
 to Godot's output panel. Player score history lives in `user://`, outside the project.
+
+Game3D passes status and completed score records to CombatHud. Hidden diagnostic
+Labels retain the original HUD text for regression tools. ActorFeedback3D reads
+the actual actor HP and maximum through delegates; it does not maintain separate
+gameplay health. Each tank gets private material copies so a hit never flashes
+other tanks. Enemy3D's existing guarded death path creates one explosion sibling
+before emitting the original score signal. Effects have no physics bodies and
+do not count toward the enemy cap. Restart removes effects with the other entities.
 
 ## Collision configuration
 

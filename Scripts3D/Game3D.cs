@@ -42,6 +42,7 @@ public partial class Game3D : Node3D
 
 	private Label _hud = null!;
 	private Label _result = null!;
+	private CombatHud _presentation = null!;
 
 	// GODOT lifecycle callback, called when this scene enters the tree.
 	public override void _Ready()
@@ -143,6 +144,7 @@ public partial class Game3D : Node3D
 			new Vector3(0f, 0.5f, 0f));
 
 		_result.Text = "";
+		_presentation.HideResults();
 		UpdateHud();
 	}
 
@@ -368,6 +370,7 @@ public partial class Game3D : Node3D
 		summary.Append("Press R to play again");
 		// Godot Labels expect LF line breaks, including on Windows.
 		_result.Text = summary.ToString().Replace("\r\n", "\n");
+		_presentation.ShowResults(round, rank, leaders, saved);
 		UpdateHud();
 		GD.Print($"{reason} | Score: {_score} | Kills: {_kills} | Rank: {rank}");
 	}
@@ -384,39 +387,11 @@ public partial class Game3D : Node3D
 
 	private void CreateHud()
 	{
-		CanvasLayer layer = new() { Name = "Hud" };
-		AddChild(layer);
-
-		_hud = new Label { Name = "Stats", Position = new Vector2(20f, 14f) };
-		StyleHudLabel(_hud, 24);
-		layer.AddChild(_hud);
-
-		Label hint = new()
-		{
-			Name = "Controls",
-			Position = new Vector2(20f, 50f),
-			Text = "60-second score challenge  |  WASD: move  |  Mouse: aim / hold left to shoot\nRed: 100 pts  |  Purple: 180 pts  |  Heavy (blue-gray): 300 pts (9 hits)"
-		};
-		StyleHudLabel(hint, 17);
-		layer.AddChild(hint);
-
-		_result = new Label
-		{
-			Name = "Result",
-			HorizontalAlignment = HorizontalAlignment.Center,
-			VerticalAlignment = VerticalAlignment.Center
-		};
-		StyleHudLabel(_result, 26);
-		layer.AddChild(_result);
-		_result.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
-	}
-
-	private static void StyleHudLabel(Label label, int fontSize)
-	{
-		label.MouseFilter = Control.MouseFilterEnum.Ignore;
-		label.AddThemeFontSizeOverride("font_size", fontSize);
-		label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.9f));
-		label.AddThemeConstantOverride("outline_size", 5);
+		_presentation = new CombatHud { Name = "Hud" };
+		AddChild(_presentation);
+		_hud = _presentation.Stats;
+		_result = _presentation.Result;
+		_presentation.RestartRequested += StartGame;
 	}
 
 	private void UpdateHud()
@@ -426,6 +401,7 @@ public partial class Game3D : Node3D
 		_hud.AddThemeColorOverride("font_color",
 			_player.Health <= 35f || _remainingTime <= 10.0
 				? new Color(1f, 0.45f, 0.4f) : Colors.White);
+		_presentation.UpdateStats(_remainingTime, _player.Health, _kills, _score);
 	}
 
 	private void ClearEntities()

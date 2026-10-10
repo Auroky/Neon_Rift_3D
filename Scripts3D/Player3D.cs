@@ -34,6 +34,12 @@ public partial class Player3D : CharacterBody3D
 	public bool Active { get; set; } = true;
 
 	public float Health { get; private set; } = MaxHealth;
+	private ActorFeedback3D _visuals = null!;
+
+	public override void _Ready()
+	{
+		_visuals = ActorFeedback3D.Attach(this, () => Health, () => MaxHealth, "YOU", new Color("76e0c3"));
+	}
 
 	// GODOT input callback: remember screen position for mouse-based aiming.
 	public override void _Input(InputEvent @event)
@@ -173,6 +179,7 @@ public partial class Player3D : CharacterBody3D
 		Health = Math.Max(
 			0f,
 			Health - damage);
+		_visuals?.Hit();
 
 		// OUR rule: ignore further damage for 0.6 s after a valid hit.
 		_invulnerable = 0.6f;
@@ -202,5 +209,6 @@ public partial class Player3D : CharacterBody3D
 
 		Active = true;
 		Visible = true;
+		_visuals?.ResetVisuals();
 	}
 }
