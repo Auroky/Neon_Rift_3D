@@ -2,7 +2,7 @@
 
 This is a **3D** Godot 4 C# project. `Node3D`, `CharacterBody3D`, `Camera3D`,
 `PackedScene`, input handling, collision functions, and the engine lifecycle are
-**Godot-provided APIs**. The classes in `Scripts3D/` are **our own C# code**.
+**Godot-provided APIs**. The six classes in `Scripts3D/` are **our own C# code**.
 
 ## Main flow
 
@@ -12,7 +12,7 @@ Godot loads Scenes3D/Main3D.tscn
      -> load reusable enemy/bullet scenes via GD.Load() [Godot]
      -> connect C# gameplay signals; StartGame() [Our logic]
 Each Godot physics tick:
-  -> Game3D._PhysicsProcess()       -> countdown / HUD / mixed spawning / crowd limit
+  -> Game3D._PhysicsProcess()       -> spawn timer / enemy spawn [Our rules]
   -> Player3D._PhysicsProcess()     -> WASD, motion, mouse aim, request shot
   -> Enemy3D._PhysicsProcess()      -> select behaviour, move, contact attack
      -> ChaserEnemy3D / StrikerEnemy3D / HeavyEnemy3D.UpdateBehaviour()
@@ -23,14 +23,14 @@ Each Godot physics tick:
 
 | Our class | Responsibility | Godot base class |
 | --- | --- | --- |
-| Game3D | 60-second round, mixed spawning, scoring, HUD, results, retry | Node3D |
+| Game3D | 60-second rounds, spawning, score, results and restart | Node3D |
 | Player3D | Movement, aim, fire cooldown, HP | CharacterBody3D |
 | Enemy3D | Shared enemy health, contact damage, signals | CharacterBody3D |
 | ChaserEnemy3D | Chasing movement and Chaser stats | Our Enemy3D |
 | StrikerEnemy3D | Ranged-attack AI and Striker stats | Our Enemy3D |
-| HeavyEnemy3D | Slow chasing movement and Heavy stats | Our Enemy3D |
+| HeavyEnemy3D | Slow chasing, 200 HP and Heavy stats | Our Enemy3D |
+| ScoreHistory | Persistent round scores and top-five ranking | Plain C# class |
 | Bullet3D | Bullet lifetime, movement, collision/damage | CharacterBody3D |
-| ScoreHistory | Local round records and top-five ranking | Plain C# helper |
 
 - `Player3D.ShotRequested` -> `Game3D.SpawnPlayerBullet()`
 - `Player3D.Died` -> `Game3D.EndWithDefeat()`
@@ -38,15 +38,9 @@ Each Godot physics tick:
 - `Enemy3D.Destroyed` -> `Game3D.OnEnemyDestroyed()`
 
 Godot's `[Signal]` and `EmitSignal()` mechanism is engine-provided; **the events,
-their meaning, and the handlers are designed in our code**. Game3D creates a
-small HUD showing countdown, HP, kills, score and round results, and accepts R
-to retry after the round ends. Timeout or player death ends each round once,
-freezes actors and projectiles, and records the score through ScoreHistory.
-Status and outcomes also print to Godot's output panel.
-Movement, bullets, actor classes, signals and collision layers retain the
-original framework. The ten-kill victory check is replaced by the one-minute
-score challenge. ScoreHistory saves every finished round to `user://score_history.json`
-and supplies the best five for the result screen.
+their meaning, and the handlers are designed in our code**. No HUD or dash
+mechanics are implemented in this Week 8 3D demo. Status and outcomes are
+printed to Godot's output panel.
 
 ## Collision configuration
 

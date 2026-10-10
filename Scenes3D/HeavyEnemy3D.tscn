@@ -1,13 +1,13 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts3D/HeavyEnemy3D.cs" id="1_heavy"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_heavy"]
-albedo_color = Color(0.25, 0.06, 0.4, 1)
+[ext_resource type="PackedScene" path="res://Assets/Tanks/Tank2.fbx" id="2_tank"]
+[ext_resource type="Texture2D" path="res://Assets/Tanks/tripo_model_basecolor4.JPEG" id="3_texture"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_heavy"]
-material = SubResource("StandardMaterial3D_heavy")
-size = Vector3(1.2, 1, 1.2)
+[sub_resource type="StandardMaterial3D" id="TankMaterial"]
+roughness = 0.85
+albedo_texture = ExtResource("3_texture")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_heavy"]
 size = Vector3(1.2, 1, 1.2)
@@ -17,8 +17,15 @@ collision_layer = 2
 collision_mask = 8
 script = ExtResource("1_heavy")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_heavy")
+[node name="TankVisual" parent="." instance=ExtResource("2_tank")]
+position = Vector3(0, -0.411004, -0.019165)
+rotation = Vector3(0, 1.5707963, 0)
+scale = Vector3(0.3, 0.3, 0.3)
+
+[node name="tripo_node_af54257b" parent="TankVisual" index="0"]
+material_override = SubResource("TankMaterial")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_heavy")
+
+[editable path="TankVisual"]

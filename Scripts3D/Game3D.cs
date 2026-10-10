@@ -395,7 +395,7 @@ public partial class Game3D : Node3D
 		{
 			Name = "Controls",
 			Position = new Vector2(20f, 50f),
-			Text = "60-second score challenge  |  WASD: move  |  Mouse: aim / hold left to shoot\nRed: 100 pts  |  Pink: 180 pts  |  Purple: 300 pts (9 hits)"
+			Text = "60-second score challenge  |  WASD: move  |  Mouse: aim / hold left to shoot\nRed: 100 pts  |  Purple: 180 pts  |  Heavy (blue-gray): 300 pts (9 hits)"
 		};
 		StyleHudLabel(hint, 17);
 		layer.AddChild(hint);
