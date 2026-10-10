@@ -18,9 +18,10 @@ void vertex() {
 void fragment() {
 	vec2 p = world_position.xz;
 	float patch = smoothstep(0.51, 0.54, noise(p * 0.43));
-	vec3 paint = mix(vec3(0.30, 0.21, 0.23), vec3(0.39, 0.29, 0.26), patch * 0.12);
+	vec3 paint = mix(vec3(0.82, 0.75, 0.57), vec3(0.89, 0.82, 0.65), patch * 0.18);
 	float edge = smoothstep(8.8, 9.9, abs(p.x)) + smoothstep(5.9, 6.9, abs(p.y));
-	paint = mix(paint, vec3(0.44, 0.30, 0.25), clamp(edge, 0.0, 1.0) * noise(p * 1.7) * 0.5);
+	paint = mix(paint, vec3(0.71, 0.56, 0.36), clamp(edge, 0.0, 1.0) * noise(p * 1.7) * 0.5);
 	ALBEDO = paint;
+	EMISSION = paint * 0.10;
 	ROUGHNESS = 1.0;
 }

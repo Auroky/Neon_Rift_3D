@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://c2isie6wnh5bi"
-path="res://.godot/imported/Tank2.fbx-634b46e71d0d0ad328ef73cd01faf673.scn"
+uid="uid://bp10kmaox3nd4"
+path="res://.godot/imported/Tank1.glb-2ec1dd5e718a4e50863c51ea2ed49fd2.scn"
 
 [deps]
 
-source_file="res://Assets/Tanks/Tank2.fbx"
-dest_files=["res://.godot/imported/Tank2.fbx-634b46e71d0d0ad328ef73cd01faf673.scn"]
+source_file="res://Assets/Tanks/Tank1.glb"
+dest_files=["res://.godot/imported/Tank1.glb-2ec1dd5e718a4e50863c51ea2ed49fd2.scn"]
 
 [params]
 
@@ -32,7 +32,7 @@ meshes/force_disable_compression=false
 skins/use_named_skins=true
 animation/import=true
 animation/fps=30
-animation/trimming=true
+animation/trimming=false
 animation/remove_immutable_tracks=true
 animation/import_rest_as_RESET=false
 import_script/path=""
@@ -40,7 +40,6 @@ materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
 _subresources={}
-fbx/importer=0
-fbx/allow_geometry_helper_nodes=false
-fbx/embedded_image_handling=1
-fbx/naming_version=2
+gltf/naming_version=2
+gltf/embedded_image_handling=1
+gltf/texture_map_mode=1
