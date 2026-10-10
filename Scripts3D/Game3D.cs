@@ -1,16 +1,17 @@
 // TEACHING GUIDE: Game3D is OUR game coordinator; Node3D and PackedScene are GODOT.
 // GODOT API: _Ready, _PhysicsProcess, GD.Load, GetNode, Instantiate, AddChild.
-// OUR RULES: first spawn at 1.5 s, then every 2.5 s; win after 10 kills;
-// first four kills unlock Strikers for all subsequent spawns; score depends on enemy type.
+// OUR RULES: mixed enemies in a 60-second score challenge; death ends the round early.
+// Cycle Chaser / Striker / Heavy, cap the crowd, and gently increase spawn tempo.
 // WORLD UNITS: speeds are Godot 3D units per second, not pixels per second.
 
 using Godot;
 using System;
+using System.Text;
 
 public partial class Game3D : Node3D
 {
-	// OUR victory condition: the player must defeat 10 enemies.
-	private const int TargetKills = 10;
+	private const double RoundDuration = 60.0;
+	private const int MaxActiveEnemies = 8;
 
 	private readonly RandomNumberGenerator _rng =
 		new();
@@ -18,6 +19,8 @@ public partial class Game3D : Node3D
 	private PackedScene _chaserScene = null!;
 
 	private PackedScene _strikerScene = null!;
+
+	private PackedScene _heavyScene = null!;
 
 	private PackedScene _bulletScene = null!;
 
@@ -31,7 +34,14 @@ public partial class Game3D : Node3D
 
 	private int _score;
 
+	private int _spawnCount;
+
 	private bool _running;
+	private double _remainingTime;
+	private ScoreHistory _history = null!;
+
+	private Label _hud = null!;
+	private Label _result = null!;
 
 	// GODOT lifecycle callback, called when this scene enters the tree.
 	public override void _Ready()
@@ -48,6 +58,10 @@ public partial class Game3D : Node3D
 			GD.Load<PackedScene>(
 				"res://Scenes3D/StrikerEnemy3D.tscn");
 
+		_heavyScene =
+			GD.Load<PackedScene>(
+				"res://Scenes3D/HeavyEnemy3D.tscn");
+
 		_bulletScene =
 			GD.Load<PackedScene>(
 				"res://Scenes3D/Bullet3D.tscn");
@@ -57,6 +71,9 @@ public partial class Game3D : Node3D
 
 		_player =
 			GetNode<Player3D>("Player");
+
+		CreateHud();
+		_history = new ScoreHistory();
 
 		// OUR signal-based design: actors request actions; Game3D owns spawning.
 		_player.ShotRequested +=
@@ -76,6 +93,16 @@ public partial class Game3D : Node3D
 			return;
 		}
 
+		// Count the full physics delta so slow frames do not extend the round.
+		_remainingTime = Math.Max(0.0, _remainingTime - Math.Max(0.0, deltaValue));
+		UpdateHud();
+		if (_remainingTime <= 0.000001)
+		{
+			_remainingTime = 0.0;
+			EndRound("TIME UP");
+			return;
+		}
+
 		float delta = Math.Min(
 			(float)deltaValue,
 			0.033f);
@@ -84,10 +111,15 @@ public partial class Game3D : Node3D
 
 		if (_spawnTimer <= 0f)
 		{
-			SpawnEnemy();
+			// OUR small mixed groups: leave space to dodge rather than flood the arena.
+			int spaces = MaxActiveEnemies - CountActiveEnemies();
+			for (int i = 0; i < Math.Min(2, spaces); i++)
+			{
+				SpawnEnemy();
+			}
 
-			// OUR spawning interval: one enemy every 2.5 seconds.
-			_spawnTimer = 2.5f;
+			// OUR pacing: 2.5 s initially, 2.1 s at four kills, 1.8 s at eight.
+			_spawnTimer = _kills >= 8 ? 1.8f : (_kills >= 4 ? 2.1f : 2.5f);
 		}
 	}
 
@@ -99,6 +131,9 @@ public partial class Game3D : Node3D
 
 		_score = 0;
 
+		_spawnCount = 0;
+		_remainingTime = RoundDuration;
+
 		// OUR opening delay: spawn first enemy 1.5 seconds after game start.
 		_spawnTimer = 1.5f;
 
@@ -106,23 +141,27 @@ public partial class Game3D : Node3D
 
 		_player.ResetPlayer(
 			new Vector3(0f, 0.5f, 0f));
+
+		_result.Text = "";
+		UpdateHud();
 	}
 
 	private void SpawnEnemy()
 	{
+		_spawnCount++;
+
 		PackedScene selectedScene =
-			// OUR progression: spawn Chasers while kills = 0..3; then Strikers.
-			_kills < 4
-				? _chaserScene
-				: _strikerScene;
+			// OUR mixed pattern keeps all three roles throughout the round.
+			_spawnCount % 3 == 0
+				? _heavyScene
+				: (_spawnCount % 3 == 1 ? _chaserScene : _strikerScene);
 
 		Enemy3D enemy =
 			selectedScene.Instantiate<Enemy3D>();
 
 		_entities.AddChild(enemy);
 
-		enemy.GlobalPosition =
-			RandomArenaEdgePosition();
+		enemy.GlobalPosition = SafeArenaEdgePosition();
 
 		enemy.Configure(_player);
 
@@ -131,6 +170,51 @@ public partial class Game3D : Node3D
 
 		enemy.ShotRequested +=
 			SpawnEnemyBullet;
+	}
+
+	private int CountActiveEnemies()
+	{
+		int count = 0;
+		foreach (Node child in _entities.GetChildren())
+		{
+			if (child is Enemy3D enemy && !enemy.IsQueuedForDeletion())
+			{
+				count++;
+			}
+		}
+		return count;
+	}
+
+	private Vector3 SafeArenaEdgePosition()
+	{
+		// Avoid appearing on top of the player or stacking a fresh pair together.
+		Vector3 best = Vector3.Zero;
+		float bestClearance = -1f;
+		for (int attempt = 0; attempt < 12; attempt++)
+		{
+			Vector3 candidate = RandomArenaEdgePosition();
+			float playerDistance = candidate.DistanceTo(_player.GlobalPosition);
+			float clearance = playerDistance;
+			foreach (Node child in _entities.GetChildren())
+			{
+				if (child is Enemy3D enemy && !enemy.IsQueuedForDeletion()
+					&& enemy.Health > 0f)
+				{
+					clearance = Math.Min(clearance,
+						candidate.DistanceTo(enemy.GlobalPosition) * 2f);
+				}
+			}
+			if (clearance > bestClearance)
+			{
+				best = candidate;
+				bestClearance = clearance;
+			}
+			if (playerDistance >= 4f && clearance >= 4f)
+			{
+				return candidate;
+			}
+		}
+		return best;
 	}
 
 	private Vector3 RandomArenaEdgePosition()
@@ -205,6 +289,8 @@ public partial class Game3D : Node3D
 		float speed,
 		float damage)
 	{
+		if (!_running) return;
+
 		Bullet3D bullet =
 			_bulletScene.Instantiate<Bullet3D>();
 
@@ -232,32 +318,27 @@ public partial class Game3D : Node3D
 
 		_score += points;
 
+		UpdateHud();
+
 		GD.Print(
-			$"Kills: {_kills}/{TargetKills}"
+			$"Kills: {_kills}"
 			+ $" | Score: {_score}");
-
-		if (_kills >= TargetKills)
-		{
-			_running = false;
-
-			_player.Active = false;
-
-			GD.Print("VICTORY");
-		}
 	}
 
 	private void EndWithDefeat()
 	{
-		if (!_running)
-		{
-			return;
-		}
+		EndRound("GAME OVER");
+	}
 
+	private void EndRound(string reason)
+	{
+		// A round can finish only once, even if death and the timer happen together.
+		if (!_running) return;
 		_running = false;
+		_player.Active = false;
+		_player.Velocity = Vector3.Zero;
+		foreach (Node child in _entities.GetChildren()) child.SetPhysicsProcess(false);
 
-<<<<<<< Updated upstream
-		GD.Print("GAME OVER!!!!");
-=======
 		RoundScore round = new()
 		{
 			Score = _score,
@@ -345,7 +426,6 @@ public partial class Game3D : Node3D
 		_hud.AddThemeColorOverride("font_color",
 			_player.Health <= 35f || _remainingTime <= 10.0
 				? new Color(1f, 0.45f, 0.4f) : Colors.White);
->>>>>>> Stashed changes
 	}
 
 	private void ClearEntities()

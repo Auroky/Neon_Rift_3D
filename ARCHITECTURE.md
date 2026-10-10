@@ -15,7 +15,7 @@ Each Godot physics tick:
   -> Game3D._PhysicsProcess()       -> spawn timer / enemy spawn [Our rules]
   -> Player3D._PhysicsProcess()     -> WASD, motion, mouse aim, request shot
   -> Enemy3D._PhysicsProcess()      -> select behaviour, move, contact attack
-     -> ChaserEnemy3D.UpdateBehaviour() / StrikerEnemy3D.UpdateBehaviour()
+     -> ChaserEnemy3D / StrikerEnemy3D / HeavyEnemy3D.UpdateBehaviour()
   -> Bullet3D._PhysicsProcess()     -> move, collide, damage, expire
 ```
 
@@ -23,11 +23,13 @@ Each Godot physics tick:
 
 | Our class | Responsibility | Godot base class |
 | --- | --- | --- |
-| Game3D | Game state, spawning, score, victory/defeat | Node3D |
+| Game3D | 60-second rounds, spawning, score, results and restart | Node3D |
 | Player3D | Movement, aim, fire cooldown, HP | CharacterBody3D |
 | Enemy3D | Shared enemy health, contact damage, signals | CharacterBody3D |
 | ChaserEnemy3D | Chasing movement and Chaser stats | Our Enemy3D |
 | StrikerEnemy3D | Ranged-attack AI and Striker stats | Our Enemy3D |
+| HeavyEnemy3D | Slow chasing, 200 HP and Heavy stats | Our Enemy3D |
+| ScoreHistory | Persistent round scores and top-five ranking | Plain C# class |
 | Bullet3D | Bullet lifetime, movement, collision/damage | CharacterBody3D |
 
 - `Player3D.ShotRequested` -> `Game3D.SpawnPlayerBullet()`
